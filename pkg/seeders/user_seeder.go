@@ -9,8 +9,8 @@ import (
 )
 
 func SeedAdmin(db *gorm.DB) {
-	adminUsername := "lazycoder"
-	adminPassword := "kodokij0!@#"
+	adminUsername := "" // your admin username here
+	adminPassword := "" // your admin password here
 
 	var admin entities.User
 	result := db.First(&admin, "username = ?", adminUsername)
