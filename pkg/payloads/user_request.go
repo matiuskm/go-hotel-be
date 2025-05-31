@@ -6,3 +6,12 @@ type RegisterUserRequest struct {
 	FullName string `json:"full_name" validate:"required"`
 	Role string `json:"role" validate:"required,oneof=admin manager receptionist housekeeping"`
 }
+
+type AssignRoleRequest struct {
+	Role string `json:"role" validate:"required,oneof=admin manager receptionist housekeeping"`
+}
+
+type EditUserRequest struct {
+	FullName string `json:"full_name" validate:"required"`
+	Role string `json:"role" validate:"required,oneof=admin manager receptionist housekeeping"`
+}

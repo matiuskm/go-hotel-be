@@ -45,15 +45,20 @@ func RegisterRoutes(r *gin.RouterGroup, db *gorm.DB) {
 
 	// edit user (admin)
 	r.PUT("/:id", middlewares.RequireRoles("admin"), func (c *gin.Context) {
-		var req struct {
-			FullName string `json:"full_name"`
-			Role string `json:"role"`
-		}
-		idParam := c.Param("id")
+		validate := validator.New()
+		var req = payloads.EditUserRequest{}
+
 		if err := c.ShouldBindJSON(&req); err!= nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
 			return
 		}
+
+		if err := validate.Struct(req); err!= nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		idParam := c.Param("id")
 		var user entities.User
 		if err := db.First(&user, idParam).Error; err!= nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
@@ -118,11 +123,14 @@ func RegisterRoutes(r *gin.RouterGroup, db *gorm.DB) {
 	// assign role (admin)
 	r.PUT("/:id/role", middlewares.RequireRoles("admin"), func(c *gin.Context) {
 		idParam := c.Param("id")
-		var req struct {
-			Role string `json:"role"`
-		}
+		validate := validator.New()
+		var req = payloads.AssignRoleRequest{}
 		if err := c.ShouldBindJSON(&req); err!= nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+			return
+		}
+		if err := validate.Struct(req); err!= nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		var user entities.User
