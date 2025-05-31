@@ -61,5 +61,53 @@ func RegisterRoutes(r *gin.RouterGroup, db *gorm.DB) {
 		c.JSON(http.StatusOK, gin.H{"message": "user updated"})
 	})
 
-	r.PUT("/me", func(c *gin.Context) {})
+	r.PUT("/me", func(c *gin.Context) {
+		uid, ok := c.Get("user_id")
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+		var req struct {
+			FullName string `json:"full_name"`
+			Password string `json:"password"`
+		}
+		if err := c.ShouldBindJSON(&req); err!= nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+			return
+		}
+		var user entities.User
+		if err := db.First(&user, uid).Error; err!= nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+		user.FullName = req.FullName
+		if req.Password != "" {
+			hash, _ := etc.HashPassword(req.Password)
+			user.Password = hash
+		}
+		if err := db.Save(&user).Error; err!= nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "failed to update user"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "profile updated"})
+	})
+
+	r.DELETE("/:id", func(c *gin.Context) {
+		role, _ := c.Get("role")
+		if role!= "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		idParam := c.Param("id")
+		var user entities.User
+		if err := db.First(&user, idParam).Error; err!= nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+		if err := db.Delete(&user).Error; err!= nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "failed to delete user"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "user deleted"})
+	})
 }

@@ -2,8 +2,9 @@ package main
 
 import (
 	"log"
-	userHandler "matiuskm/go-hotel-be/application/handlers/user"
 	authHandler "matiuskm/go-hotel-be/application/handlers/auth"
+	userHandler "matiuskm/go-hotel-be/application/handlers/user"
+	"matiuskm/go-hotel-be/application/middlewares"
 	"matiuskm/go-hotel-be/config"
 	"matiuskm/go-hotel-be/infrastructure/database"
 	"net/http"
@@ -41,7 +42,9 @@ func main() {
 	}))
 
 	api := r.Group("/api")
-	userHandler.RegisterRoutes(api.Group("/users"), dbConn)
+	userGroup := api.Group("/users")
+	userGroup.Use(middlewares.JWTAuth())
+	userHandler.RegisterRoutes(userGroup, dbConn)
 	api.POST("/login", authHandler.LoginHandler(dbConn))
 	
 	r.GET("/", func(c *gin.Context) {
